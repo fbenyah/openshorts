@@ -29,6 +29,15 @@ ARG VITE_OPENPANEL_CLIENT_ID=""
 ENV VITE_OPENPANEL_CLIENT_ID=$VITE_OPENPANEL_CLIENT_ID
 RUN npm run build
 
+# ---- static serving + API reverse proxy (self-hosted production) ----
+# Used by docker-compose.prod.yml. Must stay BEFORE `prod`: the last stage is
+# the default build target for Coolify.
+FROM nginx:alpine AS selfhost
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.selfhost.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
 # ---- static serving (nginx) ----
 FROM nginx:alpine AS prod
 COPY --from=build /app/dist /usr/share/nginx/html
