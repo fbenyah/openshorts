@@ -1,0 +1,6 @@
+# Files executed or parsed inside Linux containers must keep LF endings, even
+# when checked out on Windows with core.autocrlf=true: a CRLF shebang
+# ("#!/bin/sh\r") makes the kernel report "no such file or directory".
+bin/* text eol=lf
+*.sh text eol=lf
+*.conf text eol=lf

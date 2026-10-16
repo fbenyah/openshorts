@@ -1,0 +1,28 @@
+# NVIDIA GPU override for docker-compose.prod.yml (tuned for an 8 GB card).
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.gpu.yml up --build -d
+#
+# Host needs the NVIDIA driver and GPU support in Docker (Docker Desktop + WSL2
+# on Windows; `docker run --rm --gpus all ubuntu nvidia-smi -L` must work).
+# Everything below can be overridden from .env or the shell.
+services:
+  backend:
+    build:
+      args:
+        GPU: "1"
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL:-large-v3-turbo}
+      - WHISPER_DEVICE=${WHISPER_DEVICE:-cuda}
+      - WHISPER_COMPUTE=${WHISPER_COMPUTE:-float16}
+      - FFMPEG_ENCODER=${FFMPEG_ENCODER:-auto}
+      # VRAM, not CPU, is the limit: size this against free VRAM first
+      # (docs/architecture/jobs-and-deploys.md). 1 is safe on 8 GB.
+      - MAX_CONCURRENT_JOBS=${MAX_CONCURRENT_JOBS:-1}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              # video is required for NVENC.
+              capabilities: [gpu, video]
